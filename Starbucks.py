@@ -46,10 +46,9 @@ st.title("Starbucks U.S. Store Analysis")
 
 st.markdown(
     """
-    Hello, and welcome to my Streamlit project on Starbucks. 
-    This project explores Starbucks store locations across the United States 
-    using line charts, horizontal and stacked bar charts, and a geographic scatter map.
-    The design is inspired by the iconic Pink Drink.
+    Hi! This is my Streamlit project about Starbucks.  
+    It shows Starbucks store locations across the U.S. using line charts, horizontal and stacked bar charts, and a geographic scatter map.  
+    The pink theme is inspired by the Starbucks Pink Drink.
     """
 )
 
