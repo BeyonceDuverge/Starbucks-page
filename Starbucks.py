@@ -14,7 +14,6 @@ This project explores Starbucks store locations across the United States using l
 import pandas as pd
 import streamlit as st
 import pydeck as pdk
-import matplotlib.pyplot as plt
 
 # [ST4] Page Design
 st.set_page_config(
@@ -22,7 +21,7 @@ st.set_page_config(
     layout="wide"
 )
 
-#[ST4] Custom Page Design
+# [ST4] Custom Page Design
 st.markdown(
     """
     <style>
@@ -48,14 +47,13 @@ st.markdown(
     """
     Hello, and welcome to my Streamlit project on Starbucks. 
     This project explores Starbucks store locations across the United States 
-    using line charts, horizontal and stacked bar charts, and a geographic scatter map.
+    using Streamlit charts and an interactive geographic map.
     The design is inspired by the iconic Pink Drink.
     """
 )
 
 # [PY3] Safe file loading
-path = "C:\\Users\\beyon\\OneDrive - Bentley University\\Academics\\2025–2026\\Spring 2026\\CS 230\\Python\\Class Materials\\Streamlit\\"
-df = pd.read_excel(path + "usa_starbucks.xlsx", engine="openpyxl")
+df = pd.read_excel("usa_starbucks.xlsx", engine="openpyxl")
 
 # [DA1] Data cleaning
 df.columns = df.columns.str.lower().str.replace(" ", "_")
@@ -115,10 +113,10 @@ min_stores = st.sidebar.slider(
     value=1
 )
 
-#[DA4] One-condition filter
+# [DA4] One-condition filter
 filtered_df = df[df["state/province"].isin(selected_states)]
 
-#[DA5] Two-condition filter
+# [DA5] Two-condition filter
 filtered_state_counts = state_counts[
     (state_counts["state/province"].isin(selected_states)) &
     (state_counts["store_count"] >= min_stores)
@@ -132,106 +130,19 @@ if page == "Summary":
     c2.metric("Average Stores per State", average_stores)
     c3.metric("Top State", top_state["state/province"], top_state["store_count"])
 
-#[VIZ1] Line chart
-    top10 = state_counts.head(10)
-
-    fig, ax = plt.subplots()
-    ax.plot(
-        top10["state/province"],
-        top10["store_count"],
-        marker="o",
-        color="#F2A1B3"
-    )
-    ax.set_title("Top 10 States by Starbucks Stores")
-    ax.set_xlabel("State")
-    ax.set_ylabel("Number of Stores")
-
-    st.pyplot(fig)
+    # [VIZ1] Line chart
+    top10 = state_counts.head(10).set_index("state/province")
+    st.line_chart(top10["store_count"])
 
 elif page == "State Comparison":
     st.subheader("🏷️ Stores by State")
 
-    sorted_data = filtered_state_counts.sort_values(by="store_count", ascending=True)
-
-#[VIZ2] Horizontal bar chart
-    fig, ax = plt.subplots(figsize=(10, 6))
-    ax.barh(
-        sorted_data["state/province"],
-        sorted_data["store_count"],
-        color="#F2A1B3"
-    )
-    ax.set_title("Starbucks Stores by State")
-    ax.set_xlabel("Number of Stores")
-    ax.set_ylabel("State")
-
-    st.pyplot(fig)
-    st.dataframe(sorted_data)
-
-#[MAP]
-elif page == "Geographic Map":
-    st.subheader("🗺️ Starbucks Store Geographic Map")
-
-    map_df = filtered_df.dropna(subset=["latitude", "longitude"])
-
-    if map_df.empty:
-        st.warning("No locations available.")
-    else:
-        layer = pdk.Layer(
-            "ScatterplotLayer",
-            data=map_df,
-            get_position="[longitude, latitude]",
-            get_radius=900,
-            get_fill_color="[242, 161, 179, 150]",
-            pickable=True
-        )
-
-        view_state = pdk.ViewState(
-            latitude=map_df["latitude"].mean(),
-            longitude=map_df["longitude"].mean(),
-            zoom=4.5,
-            pitch=30
-        )
-
-        deck = pdk.Deck(
-            layers=[layer],
-            initial_view_state=view_state,
-            tooltip={
-                "html": (
-                    "<b>Store #:</b> {store_number}<br/>"
-                    "<b>City:</b> {city}<br/>"
-                    "<b>State:</b> {state/province}<br/>"
-                    "<b>Density:</b> {density_category}"
-                )
-            }
-        )
-
-        st.pydeck_chart(deck)
-
-elif page == "Ownership Analysis":
-    st.subheader("📈 Ownership Analysis")
-
-# [DA6] Pivot table
-    pivot_table = pd.pivot_table(
-        df,
-        values="store_number",
-        index="state/province",
-        columns="ownership_type",
-        aggfunc="count",
-        fill_value=0
+    # [VIZ2] Bar chart
+    sorted_data = (
+        filtered_state_counts
+        .sort_values(by="store_count", ascending=False)
+        .set_index("state/province")
     )
 
-    st.dataframe(pivot_table)
+    st.bar_chart(sorted_data["store_count"])
 
-# [VIZ3] Stacked bar chart
-    fig, ax = plt.subplots(figsize=(10, 6))
-    pivot_table.loc[selected_states].plot(
-        kind="bar",
-        stacked=True,
-        ax=ax,
-        color=["#F7C6D5", "#F2A1B3"]
-    )
-    ax.set_title("Store Ownership Breakdown by State")
-    ax.set_xlabel("State")
-    ax.set_ylabel("Number of Stores")
-
-    st.pyplot(fig)
